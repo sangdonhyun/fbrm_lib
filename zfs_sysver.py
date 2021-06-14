@@ -49,7 +49,15 @@ class zfs_sys():
         local_time = utc_time + datetime.timedelta(hours=9)
         return local_time.strftime('%Y-%m-%d %H:%M:%S')
 
-
+    def get_zfs_serial(self,asn,peer_asn):
+        print asn
+        print peer_asn
+        zfs_serial = asn
+        try:
+            zfs_serial = ''.join(sorted(set[asn,peer_asn]))
+        except Exception as e:
+            print str(e)
+        return zfs_serial
 
     def get_cluster(self,asn):
         print '#'*50
@@ -75,6 +83,8 @@ class zfs_sys():
             print '-'*50
             print cluster
             print cluster_json['cluster'][cluster]
+            zfs_serial = self.get_zfs_serial(cluster_dict['asn'],cluster_dict['peer_asn'])
+            cluster_dict['zfs_serial'] = zfs_serial
             if not cluster == 'resources':
                 val = cluster_json['cluster'][cluster]
                 print 'val :',val,type(val)
@@ -107,6 +117,7 @@ class zfs_sys():
                         res_dict['fbrm_date'] = self.fbrm_datetime
                     resource_list.append(res_dict)
         cluster_list.append(cluster_dict)
+
         print cluster_list
         print resource_list
         db_name = 'master.master_zfs_cluster'
@@ -150,6 +161,15 @@ class zfs_sys():
         asn = zfs_info['asn']
         self.get_cluster(asn)
 
+    def set_cluster(self):
+        query = """INSERT INTO master.mst_cluster  
+SELECT zfs_serial ,cluster_name,'SYS',to_char(now(),'YYYYMMDDHHMISS') FROM master.master_zfs_cluster mzc GROUP BY zfs_serial,cluster_name """
+        print query
+        rows = self.db.getRaw(query)
+        for row in rows:
+            print row
+
+
 class Manager():
     def __init__(self):
         self.zfs_list=self.get_zfs_list()
@@ -167,8 +187,10 @@ class Manager():
         return zfs_list
 
     def main(self):
+        print self.zfs_list
         for zfs in self.zfs_list:
             zfs_sys(zfs).main()
+            # zfs_sys(zfs).set_cluster()
 
 
 if __name__=='__main__':

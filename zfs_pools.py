@@ -138,6 +138,7 @@ class zfs_pools():
             prj['space_snapshots'] = str(int(prj['space_snapshots']))
             prj['fbrm_date'] = self.tb_c.to_day_d
             prj['ins_date_time'] = self.ins_date
+            prj['ins_date_time'] = self.ins_date
             create_str = prj['creation']
             "20200319T06:47:06"
             create_date = datetime.datetime.strptime(create_str, "%Y%m%dT%H:%M:%S").strftime('%Y-%m-%d %H:%M:%S')
@@ -238,6 +239,7 @@ class zfs_pools():
             fs['space_snapshots'] = str(int(fs['space_snapshots']))
             fs['fbrm_date'] =self.tb_c.to_day_d
             fs['ins_date_time'] = self.ins_date
+            fs['asn'] = self.asn
             fs=self.set_str(fs)
             print type(fs['root_acl'])
             fs['root_acl'] = str(fs['root_acl'])
@@ -326,6 +328,7 @@ class zfs_pools():
                     zfs_service_ip = v4addr
                 service_ip['zfs_service_ip'] = zfs_service_ip
                 service_ip['fbrm_date'] =self.tb_c.to_day_d
+                service_ip['asn'] = self.asn
                 zfs_network_interfaces.append(service_ip)
         tb_name = 'live.live_zfs_network_interfaces'
         self.db.dbInsertList(zfs_network_interfaces,tb_name)
