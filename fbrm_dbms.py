@@ -325,6 +325,7 @@ class fbrm_db():
         return rows
     
     def getRaw(self,query_string):
+        print self.conn_string
         db=psycopg2.connect(self.conn_string)
         
         try:

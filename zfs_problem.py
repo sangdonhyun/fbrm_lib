@@ -1,3 +1,4 @@
+
 import os
 import sys
 import json
@@ -16,16 +17,13 @@ class zfs_problem():
         self.to_day_d=self.today.strftime('%Y-%m-%d')
         self.zfs_ip = self.zfs['ip']
         self.zfs_name= self.zfs['name']
-
     def set_path(self):
         curl_path=self.cfg.get('common','curl_path')
         path = os.environ['PATH']
         os.environ['PATH'] = '{};{}'.format(curl_path,path)
-
     def get_common_cmd(self):
         cmd="curl --user {}:{} -k -i https://{}:{}".format(self.zfs['user'],self.zfs['passwd'],self.zfs['ip'],self.zfs['port'])
         return cmd
-
     def get_cfg(self):
         cfg=ConfigParser.RawConfigParser()
         cfgFile=os.path.join('config','config.cfg')
@@ -40,7 +38,6 @@ class zfs_problem():
                 break
         json_ret=json.loads(json_data)
         return json_ret
-
     def set_colon(self,dict):
         for key in dict.keys():
             val=  dict[key]
@@ -48,7 +45,11 @@ class zfs_problem():
             val = val.replace('\"', '~')
             dict[key] = val
         return dict
-        
+    def set_utf(self,info):
+        for key in info.keys():
+            if isinstance(info[key],unicode):
+                info[key] = info[key].encode("utf-8")
+        return info
     def main(self):
         problem_list=[]
         url='/api/problem/v1/problems'
@@ -64,10 +65,8 @@ class zfs_problem():
             problem['ins_date_time'] = self.today.strftime('%Y-%m-%d %H:%M:%S')
             problem['zfs_name'] = self.zfs_name
             problem['zfs_ip'] = self.zfs_ip
-            problem_list.append(problem)
-
+            problem_list.append(self.set_utf(problem))
         self.db.dbInsertList(problem_list,'event.evt_zfs_problem')
-
 class Manager():
     def __init__(self):
         self.zfs_list=self.get_zfs_list()
@@ -83,12 +82,12 @@ class Manager():
                 zfs[opt]=cfg.get(sec,opt)
             zfs_list.append(zfs)
         return zfs_list
-
     def main(self):
         for zfs in self.zfs_list:
-
-            zfs_problem(zfs).main()
-
+            try:
+                zfs_problem(zfs).main()
+            except:
+                pass
 
 if __name__=='__main__':
     while True:
