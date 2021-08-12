@@ -66,8 +66,13 @@ class fbrm_db():
                 passwd= self.dec.fdec(passwd)
             except:
                 pass
-        
-        return "host='%s' dbname='%s' user='%s' password='%s'"%(ip,dbname,user,passwd)
+
+        if 'port' in cfg.options('database'):
+            port = cfg.get('database', 'port')
+            con_str = "host='%s' dbname='%s' user='%s' password='%s' port = '%s'" % (ip, dbname, user, passwd, port)
+        else:
+            con_str = "host='%s' dbname='%s' user='%s' password='%s'" % (ip, dbname, user, passwd)
+        return con_str
         
     
     def getConnectInfo(self):
@@ -251,9 +256,9 @@ class fbrm_db():
                 
                 val+=(i,)
             valStr = str(val)
-            print valStr
+
             query = 'insert into %s %s values %s;'%(table,colStr,valStr)
-            print query
+
             query_set.append(query)
         
         con = None

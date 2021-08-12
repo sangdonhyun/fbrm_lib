@@ -164,7 +164,7 @@ class zfs_pools():
             cluster_name = ''
         # self.i_cluster_name, self.cluster_name = zfs_name, cluster_name
         for prj in self.set_prj_list:
-            # print prj
+            print prj
             prj_dict = {}
             del prj['source']
             prj['zfs_name'] = self.zfs['name']
@@ -186,6 +186,10 @@ class zfs_pools():
             prj['creation'] = create_date
             prj['cluster_name'] = self.cluster_name
             prj_dict_list.append(prj)
+            if 'shares3' in prj.keys():
+                del(prj['shares3'])
+            if 'shareoci' in prj.keys():
+                del(prj['shareoci'])
         # tb_name = 'zfs_projects_realtime'
         # tb_name_y = 'fbrm.' + tb_name + "_" + self.tb_c.to_day_y
         # self.tb_c.is_table_tb(tb_name)

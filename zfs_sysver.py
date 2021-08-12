@@ -1,3 +1,4 @@
+# -*-coding:utf-8-*-
 import os
 import sys
 import json
@@ -22,7 +23,7 @@ class zfs_sys():
         os.environ['PATH'] = '{};{}'.format(curl_path, path)
 
     def get_common_cmd(self):
-        cmd = "curl --user {}:{} -k -i https://{}:{}".format(self.zfs['user'], self.zfs['passwd'], self.zfs['ip'],
+        cmd = "curl --user {}:{} -k -L https://{}:{}".format(self.zfs['user'], self.zfs['passwd'], self.zfs['ip'],
                                                              self.zfs['port'])
         return cmd
 
@@ -69,10 +70,12 @@ class zfs_sys():
         ret = os.popen(cmd).read()
         print ret
         cluster_json = self.get_json(ret)
-        print cluster_json
+
         cluster_list = []
         resource_list = []
         cluster_dict = {}
+
+
         for cluster in cluster_json['cluster']:
             cluster_dict['asn'] = asn
             cluster_dict['cluster_name'] = zfs_name
@@ -83,7 +86,7 @@ class zfs_sys():
             print cluster_json['cluster'][cluster]
             if not cluster == 'resources':
                 val = cluster_json['cluster'][cluster]
-                print 'val :', val, type(val)
+
                 if "'" in val:
                     val = val.replace("'", "`")
                 if "[" in val:
@@ -93,8 +96,6 @@ class zfs_sys():
                 resource_dict = {}
                 resouces = cluster_json['cluster'][cluster]
                 for resource in resouces:
-                    print resource.keys()
-                    print resource.values()
                     res_dict = {}
                     res_dict['asn'] = asn
                     for key in resource.keys():
@@ -106,18 +107,57 @@ class zfs_sys():
                         res_dict[key] = val
                         res_dict['fbrm_date'] = self.fbrm_datetime
                     resource_list.append(self.set_utf(res_dict))
-        print cluster_dict.keys()
-        asn = cluster_dict['asn']
+
+        asn = cluster_dict['asn'].encode("utf-8")
         peer_asn = cluster_dict['peer_asn']
+        print '-'*50
+        if not peer_asn =="":
+            zfs_serial=''.join(sorted([asn,peer_asn]))
+        else:
+            zfs_serial = asn
+        cluster_dict['zfs_serial'] = zfs_serial
         cluster_dict['cluster_name'] = self.cluster_name
-        cluster_list.append(self.set_utf(cluster_dict))
-        print cluster_list
-        print resource_list
+        print 'zfs_serial :',zfs_serial
+        print cluster_dict
+        asn_list = self.get_asn_list()
+        serial_list = self.get_mst_cluter()
+        mst_cluster_list=[]
+        print '*'*50
+        print zfs_serial
+        print not zfs_serial in serial_list
+
+        if not zfs_serial in serial_list:
+            mst_cluster=dict()
+            mst_cluster['zfs_serial'] = zfs_serial.encode("utf-8")
+            mst_cluster['cluster_name'] = self.cluster_name
+            mst_cluster['reg_usr'] = 'SYS'
+            mst_cluster_list.append(mst_cluster)
+            """
+            5c5bd1d2-402c-65ed-f1a0-fa54bccf3783b4e84805-d835-4eef-d1a3-fc18b9eebf67	PEDW_BOX_#3	SYS	20210524010842
+            3e9e38da-8972-4768-99eb-dae2959e85ec7430f3fb-c8bf-ec76-d8e1-9a2019310032	PEDW_BOX_#1	SYS	20210524010842
+            1be8103e-c0cb-40bc-c5f1-b57e93c26ada32c442b2-5779-c93b-9301-dc123ff292bb	PEDW_BOX_#2	SYS	20210524010842
+            2c155bd1-176b-4480-8325-f037b6774ccca3135a47-1d33-49f7-b1c6-9aec97ffd88f	PCOR_BOX_#2	SYS	20210524010842
+            332fa851-8c38-4f62-ba49-ea035894b306af2fa30c-5bc0-422a-89b2-987da66c2af5	PCOR_BOX_#1	SYS	20210524010842
+            """
+            serial_list.append(zfs_serial.encode("utf-8"))
+
+        print asn,type(asn),asn_list,not asn in asn_list
+        if not asn in asn_list:
+            cluster_list.append(self.set_utf(cluster_dict))
+
+
 
         db_name = 'master.master_zfs_cluster'
+        print cluster_list
         self.db.dbInsertList(cluster_list, db_name)
+
+        sql="DELETE FROM master.master_zfs_cluster_resouces mzcr  WHERE asn ='{}'".format(asn)
+        self.db.queryExec(sql)
         db_name = 'master.master_zfs_cluster_resouces'
         self.db.dbInsertList(resource_list, db_name)
+        db_name = 'master.mst_cluster'
+        print mst_cluster_list
+        self.db.dbInsertList(mst_cluster_list, db_name)
 
     def get_sysver(self, zfs_info):
         return zfs_info['asn']
@@ -137,22 +177,52 @@ class zfs_sys():
             pass
         return cluster_name
 
+    def get_asn_list(self):
+        query = "SELECT asn FROM master.master_zfs_cluster "
+        asn_list = list()
+        raws=self.db.getRaw(query)
+        try:
+            for asns in raws:
+                asn = asns[0]
+
+                if asn not in asn_list:
+                    asn_list.append(asn)
+        except:
+            pass
+        return asn_list
+
+    def get_mst_cluter(self):
+        query = "SELECT zfs_serial FROM master.mst_cluster "
+        raws = self.db.getRaw(query)
+        serial_list = list()
+        for r in raws:
+            serial_list.append(r[0])
+        return serial_list
+
+
     def main(self):
+        asn_list = self.get_asn_list()
         self.fwrite('-', 'w')
         zfs_list = []
         url = '/api/system/v1/version'
         cmd = self.common_cmd + url
-        print cmd
+
         self.fwrite(cmd)
         ret = os.popen(cmd).read()
+        print ret
+
         root = self.get_json(ret)
-        print type(root)
+
         zfs_info = root['version']
         zfs_info['zfs_name'] = self.zfs['name']
         zfs_info['zfs_ip'] = self.zfs['ip']
         zfs_info['fbrm_date'] = self.today.strftime('%Y-%m-%d %H:%M:%S')
-        zfs_list.append(self.set_utf(zfs_info))
-        print zfs_info
+        print '-'*40
+        print '-'*40
+        print zfs_info['asn'],asn_list,zfs_info['asn'] not in asn_list
+        if zfs_info['asn'] not in asn_list:
+            zfs_list.append(self.set_utf(zfs_info))
+
         urn = zfs_info['urn']
         urn = urn.split(':')[-1]
         zfs_info['urn'] = urn
@@ -164,7 +234,12 @@ class zfs_sys():
         zfs_info['update_time'] = self.to_local_time(update_time)
         print 'update_time :', update_time
         print 'update_time :', self.to_local_time(update_time)
-        self.db.dbInsertList(zfs_list, 'master.master_zfs_info')
+        try:
+            self.db.dbInsertList(zfs_list, 'master.master_zfs_info')
+        except Exception as e:
+            print 'error '
+            print str(e)
+
         asn = zfs_info['asn']
         self.asn = asn
         self.cluster_name = self.get_cluster_nm()
