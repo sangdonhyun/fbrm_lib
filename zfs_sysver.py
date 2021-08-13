@@ -5,6 +5,7 @@ import json
 import ConfigParser
 import fbrm_dbms
 import datetime
+import zfs_chassis
 
 
 class zfs_sys():
@@ -16,6 +17,7 @@ class zfs_sys():
         self.db = fbrm_dbms.fbrm_db()
         self.today = datetime.datetime.now()
         self.fbrm_datetime = self.today.strftime('%Y-%m-%d %H:%M:%S')
+
 
     def set_path(self):
         curl_path = self.cfg.get('common', 'curl_path')
@@ -271,5 +273,7 @@ class Manager():
             zfs_sys(zfs).main()
 
 
+
 if __name__ == '__main__':
     Manager().main()
+    zfs_chassis.Manager().main()

@@ -1,3 +1,4 @@
+# -*-coding:utf-8-*-
 import os
 import sys
 import json
@@ -26,7 +27,7 @@ class zfs_problem():
         os.environ['PATH'] = '{};{}'.format(curl_path, path)
 
     def get_common_cmd(self):
-        cmd = "curl --user {}:{} -k -i https://{}:{}".format(self.zfs['user'], self.zfs['passwd'], self.zfs['ip'],
+        cmd = "curl --user {}:{} -k -L https://{}:{}".format(self.zfs['user'], self.zfs['passwd'], self.zfs['ip'],
                                                              self.zfs['port'])
         self.fwrite(cmd)
         return cmd
@@ -49,7 +50,7 @@ class zfs_problem():
         return json_ret
 
     def fwrite(self, msg, wbit='a'):
-        with open('chassis.txt', 'wbit') as f:
+        with open('chassis.txt', wbit) as f:
             f.write(msg + '\n')
 
     def set_colon(self, dict):
@@ -65,7 +66,8 @@ class zfs_problem():
         cmd = self.common_cmd + url
         print cmd
         ret = os.popen(cmd).read()
-        root = self.get_json(ret)
+        # root = self.get_json(ret)
+        root = json.loads(ret)
         zfs_info = root['version']
         return zfs_info['asn']
 
@@ -76,7 +78,8 @@ class zfs_problem():
         cmd = self.common_cmd + url
         print cmd
         ret = os.popen(cmd).read()
-        root = self.get_json(ret)
+        # root = self.get_json(ret)
+        root = json.loads(ret)
         chassis_list = []
         for chassis in root['chassis']:
             href = chassis['href']
@@ -101,14 +104,17 @@ class zfs_problem():
             # ['faulted', 'name', 'cpu', 'href', 'model', 'disk', 'type', 'serial', 'manufacturer']
             dict = {}
             print chassis.keys()
-            dict['asn'] = asn
-            dict['chassis_name'] = chassis_name
-            dict['name'] = chassis['name']
-            dict['model'] = chassis['model']
-            dict['type'] = chassis['type']
-            dict['serial'] = chassis['serial']
-            dict['manufacturer'] = chassis['manufacturer']
+            dict['asn'] = asn.encode('utf-8')
+            dict['chassis_name'] = chassis_name.encode('utf-8')
+            dict['name'] = chassis['name'].encode('utf-8')
+            dict['model'] = chassis['model'].encode('utf-8')
+            dict['type'] = chassis['type'].encode('utf-8')
+            dict['serial'] = chassis['serial'].encode('utf-8')
+            dict['manufacturer'] = chassis['manufacturer'].encode('utf-8')
             dict['fbrm_datetime'] = self.fbrm_datetime
+            for key in dict.keys():
+                val = dict[key]
+                dict[key] = val.encode('utf-8')
             hardware_list.append(dict)
             print chassis.keys()
             for cpus in chassis['cpu']:
@@ -116,11 +122,15 @@ class zfs_problem():
                 # ['faulted', 'name', 'cpu', 'href', 'model', 'disk', 'type', 'serial', 'manufacturer']
                 print cpus.values()
                 # ['faulted', 'label', 'href', 'cores', 'model', 'speed', 'present', 'manufacturer']
-                cpus['asn'] = asn
-                cpus['chassis_name'] = chassis_name
-                cpus['name'] = chassis['name']
-                cpus['cpu_speed'] = str(cpus['speed'])
-                cpus['cores'] = str(cpus['cores'])
+                cpus['asn'] = asn.encode('utf-8')
+                cpus['chassis_name'] = chassis_name.encode('utf-8')
+                cpus['name'] = chassis['name'].encode('utf-8')
+                cpus['cpu_speed'] = str(cpus['speed']).encode('utf-8')
+                cpus['cores'] = str(cpus['cores']).encode('utf-8')
+                cpus['label'] = str(cpus['label']).encode('utf-8')
+                cpus['href'] = str(cpus['href']).encode('utf-8')
+                cpus['model'] = str(cpus['model']).encode('utf-8')
+                cpus['manufacturer'] = str(cpus['manufacturer']).encode('utf-8')
                 del (cpus['speed'])
                 cpus['fbrm_datetime'] = self.fbrm_datetime
                 cpu_list.append(cpus)
@@ -133,12 +143,18 @@ class zfs_problem():
                     del (disk['use'])
                 else:
                     disk['disk_use'] = ''
-                disk['asn'] = asn
-                disk['chassis_name'] = chassis_name
-                disk['name'] = chassis['name']
-                disk['size'] = str(disk['size'])
+                disk['asn'] = asn.encode('utf-8')
+                disk['chassis_name'] = chassis_name.encode('utf-8')
+                disk['name'] = chassis['name'].encode('utf-8')
+                disk['size'] = str(disk['size']).encode('utf-8')
 
                 disk['fbrm_datetime'] = self.fbrm_datetime
+                if 'readytoremove' in disk.keys():
+                    del(disk['readytoremove'])
+
+                for key in disk.keys():
+                    if type(disk[key]) == type(u'aa'):
+                        disk[key] = disk[key].encode('utf-8')
                 disk_list.append(disk)
         query = "delete from master.master_zfs_hardware where asn = '{}'".format(asn)
         self.db.queryExec(query)
@@ -151,6 +167,7 @@ class zfs_problem():
         query = "delete from master.master_zfs_hardware_disks where asn = '{}'".format(asn)
         self.db.queryExec(query)
         db_name = 'master.master_zfs_hardware_disks'
+
         self.db.dbInsertList(disk_list, db_name)
         # self.db.dbInsertList(problem_list,'event.evt_zfs_problem')
 
