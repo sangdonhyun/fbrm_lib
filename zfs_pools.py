@@ -25,7 +25,7 @@ class zfs_pools():
         self.ins_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         self.today = datetime.datetime.now()
 
-        os.chdir("E:\\PycharmProjects\\fbrm_lib")
+        # os.chdir("E:\\PycharmProjects\\fbrm_lib")
 
     #        self.cluster_name = self.get_cluster_name(self.zfs['name'])
     def del_arg(self, asn_list, arg='pools'):
