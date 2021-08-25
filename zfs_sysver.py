@@ -112,6 +112,7 @@ class zfs_sys():
 
         asn = cluster_dict['asn'].encode("utf-8")
         peer_asn = cluster_dict['peer_asn']
+
         print '-'*50
         if not peer_asn =="":
             zfs_serial=''.join(sorted([asn,peer_asn]))
@@ -223,6 +224,13 @@ class zfs_sys():
         print '-'*40
         print zfs_info['asn'],asn_list,zfs_info['asn'] not in asn_list
         if zfs_info['asn'] not in asn_list:
+            asn=zfs_info['asn']
+            try:
+                peer_asn=zfs_info['peer_asn']
+            except:
+                peer_asn = ''
+            zfs_serial = ''.join(sorted([asn,peer_asn]))
+            zfs_info['zfs_serial'] = zfs_serial
             zfs_list.append(self.set_utf(zfs_info))
 
         urn = zfs_info['urn']
