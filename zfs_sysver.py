@@ -178,6 +178,17 @@ class zfs_sys():
             cluster_name = self.db.getRaw(query)[0][0]
         except:
             pass
+        if cluster_name =='':
+            query = """SELECT peer_hostname ,node_name FROM master.master_zfs_cluster WHERE zfs_serial LIKE '%{}%'""".format(
+                self.asn)
+            print query
+            zfs = self.db.getRaw(query)
+            print zfs
+            cluster_name = ''
+            for z in zfs:
+                cluster_name = '_'.join(sorted(set(z)))
+            print cluster_name
+
         return cluster_name
 
     def get_asn_list(self):
@@ -253,8 +264,8 @@ class zfs_sys():
         asn = zfs_info['asn']
         self.asn = asn
         self.cluster_name = self.get_cluster_nm()
-        zfs_name = zfs_info['nodename']
-        self.node_name = zfs_info['nodename']
+        zfs_name = zfs_info['node_name']
+        self.node_name = zfs_info['node_name']
         self.get_cluster(asn, zfs_name)
         print 'zfs_name :', zfs_name
 
