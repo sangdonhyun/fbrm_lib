@@ -183,6 +183,8 @@ class zfs_pools():
             create_str = prj['creation']
             "20200319T06:47:06"
             create_date = datetime.datetime.strptime(create_str, "%Y%m%dT%H:%M:%S").strftime('%Y-%m-%d %H:%M:%S')
+
+
             prj['creation'] = create_date
             prj['cluster_name'] = self.cluster_name
             prj_dict_list.append(prj)
@@ -190,6 +192,14 @@ class zfs_pools():
                 del(prj['shares3'])
             if 'shareoci' in prj.keys():
                 del(prj['shareoci'])
+            if 'snapret_enabled' in prj.keys():
+                del(prj['snapret_enabled'])
+            if 'retentionpolicy' in prj.keys():
+                del(prj['retentionpolicy'])
+
+            col_pr_list=['fbrm_date', ' ins_date_time', 'name', ' id', ' pool', ' default_volblocksize', ' readlimit', ' logbias', ' shareobjectstore', ' nodestroy', ' href', ' compression', ' sharetftp', ' encryption', ' copies', ' aclinherit', ' compressratio', ' space_total', ' recordsize', ' keychangedate', ' space_available', ' space_unused_res', ' maxblocksize', ' atime', ' default_user', ' space_unused_res_shares', ' default_group', ' sharesftp', ' rstchown', ' sharesmb', ' defaultreadlimit', ' defaultgroupquota', ' creation', ' sharenfs', ' migration', ' default_permissions', ' mountpoint', ' space_data', ' defaultuserquota', ' default_sparse', ' aclmode', ' dedup', ' snaplabel', ' shareftp', ' readonly', ' default_volsize', ' secondarycache', ' space_snapshots', ' quota', ' exported', ' vscan', ' reservation', ' keystatus', ' writelimit', ' checksum', ' canonical_name', ' snapdir', ' defaultwritelimit', ' sharedav', ' nbmand', ' zfs_name', ' zfs_ip', 'source', ' cluster_ip', ' asn', ' node_name', ' cluster_name']
+
+            col_list = []
         # tb_name = 'zfs_projects_realtime'
         # tb_name_y = 'fbrm.' + tb_name + "_" + self.tb_c.to_day_y
         # self.tb_c.is_table_tb(tb_name)
@@ -355,7 +365,7 @@ class zfs_pools():
         print '#' * 50
         pool_snapshot_list = []
         for snapshot in self.set_snapshot_list:
-            # print snapshot
+            print snapshot
             snapshot['space_data'] = str(int(snapshot['space_data']))
             snapshot['zfs_name'] = self.zfs['name']
             snapshot['node_name'] = self.zfs['name']
@@ -365,11 +375,18 @@ class zfs_pools():
             snapshot['asn'] = self.asn
             create_str = snapshot['creation']
             "20200319T06:47:06"
-            create_date = datetime.datetime.strptime(create_str, "%Y%m%dT%H:%M:%S").strftime('%Y-%m-%d %H:%M:%S')
+            create_utc_date = datetime.datetime.strptime(create_str, "%Y%m%dT%H:%M:%S")
+            create_kst_date = create_utc_date + datetime.timedelta(hours=9)
+            create_date = create_kst_date.strftime('%Y-%m-%d %H:%M:%S')
+            print('create_str :', create_str)
+            print('create_date :', create_date)
             snapshot['creation'] = create_date
             snapshot['cluster_name'] = self.cluster_name
             snapshot['space_unique'] = float(snapshot['space_unique'])
             snapshot['space_data'] = float(snapshot['space_data'])
+            if 'retentionpolicy' in snapshot.keys():
+                del(snapshot['retentionpolicy'])
+
             pool_snapshot_list.append(self.set_utf(snapshot))
         # tb_name = 'zfs_snapshots_realtime'
         # tb_name_y = 'fbrm.' + tb_name + "_" + self.tb_c.to_day_y
@@ -595,11 +612,12 @@ class Manager():
 if __name__ == '__main__':
     # Manager().main()
     cnt =1
-    while True:
-        Manager().main()
-        print '-'*50
-        print datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        print 'CNT :',cnt
-        print '-'*50
-        time.sleep(60*60)
-        cnt = cnt+1
+    Manager().main()
+    #while True:
+    #    Manager().main()
+    #    print '-'*50
+    #    print datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    #    print 'CNT :',cnt
+    #    print '-'*50
+    #    time.sleep(60*60)
+    #    cnt = cnt+1

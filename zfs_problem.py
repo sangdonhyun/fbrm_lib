@@ -90,9 +90,10 @@ class Manager():
                 pass
 
 if __name__=='__main__':
-    while True:
-        try:
-            Manager().main()
-        except:
-            pass
-        time.sleep(60)
+    Manager().main()
+    #while True:
+    #    try:
+    #        Manager().main()
+    #    except:
+    #        pass
+    #    time.sleep(60)
