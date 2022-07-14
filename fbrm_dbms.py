@@ -399,9 +399,22 @@ class fbrm_db():
             pass
 
 if __name__ == '__main__':
-    query  = """select * from pg_tables"""
+    asn = '32c442b2-5779-c93b-9301-dc123ff292bb'
+    query  = """SELECT peer_hostname ,node_name FROM master.master_zfs_cluster WHERE zfs_serial LIKE '%{}%'""".format(asn)
     print query
-    print fbrm_db().getRaw(query)
-    
-    
-        
+    zfs=fbrm_db().getRaw(query)
+    print zfs
+    cluster_name=''
+    for z in zfs:
+        cluster_name = '_'.join(sorted(set(z)))
+    print cluster_name
+
+    query="""SELECT *
+  FROM information_schema.columns
+ WHERE table_schema in ('master','live')
+   AND table_name   LIKE  '%zfs%'
+   AND column_name = 'cluster_name'
+     ;"""
+    rows=fbrm_db().getRaw(query)
+    for row in rows:
+        print row
