@@ -165,8 +165,9 @@ class zfs_pools():
         # self.i_cluster_name, self.cluster_name = zfs_name, cluster_name
         for prj in self.set_prj_list:
             print prj
+            prj = self.verification('PROJECTS',prj)
             prj_dict = {}
-            del prj['source']
+            # del prj['source']
             prj['zfs_name'] = self.zfs['name']
             prj['node_name'] = self.zfs['name']
             prj['asn'] = self.asn
@@ -183,33 +184,6 @@ class zfs_pools():
             create_str = prj['creation']
             "20200319T06:47:06"
             create_date = datetime.datetime.strptime(create_str, "%Y%m%dT%H:%M:%S").strftime('%Y-%m-%d %H:%M:%S')
-
-
-            prj['creation'] = create_date
-            prj['cluster_name'] = self.cluster_name
-            prj_dict_list.append(prj)
-            if 'shares3' in prj.keys():
-                del(prj['shares3'])
-            if 'shareoci' in prj.keys():
-                del(prj['shareoci'])
-            if 'snapret_enabled' in prj.keys():
-                del(prj['snapret_enabled'])
-            if 'retentionpolicy' in prj.keys():
-                del(prj['retentionpolicy'])
-
-            col_pr_list=['fbrm_date', ' ins_date_time', 'name', ' id', ' pool', ' default_volblocksize', ' readlimit', ' logbias', ' shareobjectstore', ' nodestroy', ' href', ' compression', ' sharetftp', ' encryption', ' copies', ' aclinherit', ' compressratio', ' space_total', ' recordsize', ' keychangedate', ' space_available', ' space_unused_res', ' maxblocksize', ' atime', ' default_user', ' space_unused_res_shares', ' default_group', ' sharesftp', ' rstchown', ' sharesmb', ' defaultreadlimit', ' defaultgroupquota', ' creation', ' sharenfs', ' migration', ' default_permissions', ' mountpoint', ' space_data', ' defaultuserquota', ' default_sparse', ' aclmode', ' dedup', ' snaplabel', ' shareftp', ' readonly', ' default_volsize', ' secondarycache', ' space_snapshots', ' quota', ' exported', ' vscan', ' reservation', ' keystatus', ' writelimit', ' checksum', ' canonical_name', ' snapdir', ' defaultwritelimit', ' sharedav', ' nbmand', ' zfs_name', ' zfs_ip', 'source', ' cluster_ip', ' asn', ' node_name', ' cluster_name']
-
-            col_list = []
-        # tb_name = 'zfs_projects_realtime'
-        # tb_name_y = 'fbrm.' + tb_name + "_" + self.tb_c.to_day_y
-        # self.tb_c.is_table_tb(tb_name)
-        #
-        # self.db.dbInsertList(prj_dict_list, tb_name_y)
-        tb = 'live.live_zfs_projects'
-        self.db.dbInsertList(prj_dict_list, tb)
-        store_prj_dict_list = self.set_store_list(prj_dict_list)
-        tb = 'store.store_day_zfs_projects'
-        self.db.dbInsertList(store_prj_dict_list, tb)
 
     def set_pool(self):
         print '#' * 50
@@ -228,6 +202,7 @@ class zfs_pools():
             cluster_name = ''
         pool_dict_list = []
         for pool in self.set_pool_list:
+            pool = self.verification('POOLS',pool)
             pool_dict = {}
             keys = pool.keys()
             vals = pool.values()
@@ -285,6 +260,22 @@ class zfs_pools():
             store_list.append(item)
         return store_list
 
+    def verification(self,arg,tb_dic):
+        if arg=='FILESYSTEMS':
+            basic_keys=['ins_date_time', 'id', 'canonical_name', 'name', 'pool', 'project', 'mountpoint', 'readlimit', 'effectivereadlimit', 'logbias', 'shareobjectstore', 'nodestroy', 'href', 'casesensitivity', 'utf8only', 'compression', 'sharetftp', 'encryption', 'copies', 'aclinherit', 'compressratio', 'space_total', 'recordsize', 'keychangedate', 'space_available', 'root_permissions', 'space_unused_res', 'maxblocksize', 'rstchown', 'shadow', 'atime', 'space_unused_res_shares', 'root_acl', 'normalization', 'sharesftp', 'reservation_snap', 'effectivewritelimit', 'migration', 'snapdir', 'creation', 'sharenfs', 'sharesmb', 'space_data', 'quota_snap', 'aclmode', 'dedup', 'snaplabel', 'shareftp', 'readonly', 'secondarycache', 'root_user', 'space_snapshots', 'quota', 'exported', 'vscan', 'reservation', 'keystatus', 'writelimit', 'checksum', 'root_group', 'sharedav', 'nbmand', 'zfs_name', 'zfs_ip', 'origin', 'cluster_ip', 'asn', 'origin_project', 'origin_share', 'origin_snapshot', 'origin_pool', 'origin_collection', 'node_name', 'cluster_name']
+        elif arg=='POOLS':
+            basic_keys=['u_id', 'fbrm_date', 'ins_date_time', 'name', 'asn', 'status', 'profile', 'encryption', 'owner', 'href', 'peer', 'u_available', 'u_usage_snapshots', 'u_usage_metasize', 'u_used', 'u_compression', 'u_usage_child_reservation', 'u_dedupsize', 'u_usage_reservation', 'u_free', 'u_usage_data', 'u_usage_replication', 'u_dedupratio', 'u_usage_metaused', 'u_total', 'u_usage_total', 'zfs_name', 'zfs_ip', 'cluster_ip', 'cluster_name', 'node_name']
+        elif arg == 'PROJECTS':
+            basic_keys=['fbrm_date', 'ins_date_time', 'name', 'id', 'pool', 'default_volblocksize', 'readlimit', 'logbias', 'shareobjectstore', 'nodestroy', 'href', 'compression', 'sharetftp', 'encryption', 'copies', 'aclinherit', 'compressratio', 'space_total', 'recordsize', 'keychangedate', 'space_available', 'space_unused_res', 'maxblocksize', 'atime', 'default_user', 'space_unused_res_shares', 'default_group', 'sharesftp', 'rstchown', 'sharesmb', 'defaultreadlimit', 'defaultgroupquota', 'creation', 'sharenfs', 'migration', 'default_permissions', 'mountpoint', 'space_data', 'defaultuserquota', 'default_sparse', 'aclmode', 'dedup', 'snaplabel', 'shareftp', 'readonly', 'default_volsize', 'secondarycache', 'space_snapshots', 'quota', 'exported', 'vscan', 'reservation', 'keystatus', 'writelimit', 'checksum', 'canonical_name', 'snapdir', 'defaultwritelimit', 'sharedav', 'nbmand', 'zfs_name', 'zfs_ip', 'source', 'cluster_ip', 'asn', 'node_name', 'cluster_name']
+        elif arg == 'SNAPSHOTS':
+            basic_keys=['fbrm_date', 'ins_date_time', 'id', 'name', 'pool', 'project', 'numclones', 'creation', 'share', 'collection', 'href', 'space_unique', 'space_data', 'isauto', 'shadowsnap', 'canonical_name', 'type', 'zfs_name', 'zfs_ip', 'cluster_ip', 'asn', 'node_name', 'cluster_name']
+
+        for k in tb_dic.keys():
+            if k not in basic_keys:
+                del tb_dic[k]
+        return tb_dic
+
+
     def set_filesystems(self):
         print '#' * 50
         print 'FILESYSTEMS SET '
@@ -293,7 +284,8 @@ class zfs_pools():
         pool_fs_list = []
         for fs in self.set_fs_list:
             # print fs
-            del fs['source']
+            fs = self.verification('FILESYSTEMS',fs)
+
             fs['zfs_name'] = self.zfs['name']
             fs['node_name'] = self.zfs['name']
             fs['zfs_ip'] = self.zfs['ip']
@@ -306,18 +298,7 @@ class zfs_pools():
             fs['quota'] = float(fs['quota'])
             fs['maxblocksize'] = float(fs['maxblocksize'])
             fs['reservation'] = float(fs['reservation'])
-            if 'recordsize' in fs.keys():
-                del fs['recordsize']
-            if 'space_snapshots' in fs.keys():
-                del fs['space_snapshots']
-            if 'shareoci' in fs.keys():
-                del fs['shareoci']
-            if 'shares3' in fs.keys():
-                del fs['shares3']
             fs['space_unused_res'] = str(float(fs['space_unused_res']))
-            if 'space_unused_res' in fs.keys():
-                del fs['space_unused_res']
-
             fs['fbrm_date'] = self.tb_c.to_day_d
             fs['ins_date_time'] = self.ins_date
             fs = self.set_str(fs)
@@ -365,6 +346,7 @@ class zfs_pools():
         print '#' * 50
         pool_snapshot_list = []
         for snapshot in self.set_snapshot_list:
+            snapshot = self.verification('SNAPSHOTS',snapshot)
             print snapshot
             snapshot['space_data'] = str(int(snapshot['space_data']))
             snapshot['zfs_name'] = self.zfs['name']
